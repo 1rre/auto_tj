@@ -34,12 +34,10 @@ get_messages(Token) ->
                          {"https://oauth.reddit.com/message/unread",
                           [{"Authorization", "bearer "++Token},
                            {"User-Agent", "TJ ? Auto_TJ"}]}, [], []),
-  {[{<<"kind">>,<<"Listing">>},
-    {<<"data">>, {[{<<"modhash">>, Modhash},
-                   _Dist,
-                   {<<"children">>, Children},
-                   _After,
-                   _Before]}}]} = jiffy:decode(Result),
+  {Json} = jiffy:decode(Result),
+  {Data} = proplists:get_value(<<"data">>, Json),
+  Modhash = proplists:get_value(<<"modhash">>, Data),
+  Children = proplists:get_value(<<"children">>, Data),
   {Modhash, Children}.
 
 process_message(Msg_Proplist, Modhash) ->
