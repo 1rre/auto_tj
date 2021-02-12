@@ -23,7 +23,7 @@ stop(_State) ->
 
 loop(Token) ->
   {Modhash, Messages} = get_messages(Token),
-  [process_message(Msg, Modhash) || Msg <- get_messages(Messages)], 
+  [process_message(Msg, Modhash) || {[_Kind, {<<"data">>, {Msg}}]} <- Messages], 
   ok.
 
 get_messages(Token) ->
@@ -31,7 +31,7 @@ get_messages(Token) ->
    {{"HTTP/1.1",200,"OK"},
     _Content,
     Result}} = httpc:request(get,
-                         {"https://oauth.reddit.com/message/unread.json",
+                         {"https://oauth.reddit.com/message/unread",
                           [{"Authorization", "bearer "++Token},
                            {"User-Agent", "TJ ? Auto_TJ"}]}, [], []),
   {[{<<"kind">>,<<"Listing">>},
@@ -42,8 +42,10 @@ get_messages(Token) ->
                    _Before]}}]} = jiffy:decode(Result),
   {Modhash, Children}.
 
-process_message(Msg, Modhash) ->
-  io:fwrite("~p~n~n", [Msg]).
+process_message(Msg_Proplist, Modhash) ->
+  M_Id = proplists:get_value(<<"id">>, Msg_Proplist),
+  M_Body = proplists:get_value(<<"body">>, Msg_Proplist),
+  io:fwrite("~s~n~s~n~n", [M_Id, M_Body]).
 
 get_token() ->
   Body = "grant_type=refresh_token&refresh_token="++?REFRESH_TOKEN,
