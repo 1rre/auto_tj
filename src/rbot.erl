@@ -1,7 +1,7 @@
 -module(rbot).
 -behaviour(application).
 
--export([start/2, stop/1, init/0, loop/2]).
+-export([start/2, stop/1, init/0, loop/1]).
 -include("priv_keys.hrl").
 -on_load(init/0).
 
@@ -15,24 +15,23 @@ init() ->
 start(_Type, _Args) ->
   case get_token() of
     nil -> {error, "Could not refresh token"};
-    Token -> {ok, spawn(?MODULE, loop, [Token, erlang:system_time(seconds)*0.0])}
+    Token -> {ok, spawn(?MODULE, loop, [Token])}
   end.
 
 stop(_State) ->
+  spawn(application, start, [rbot]),
   ok.
 
-loop(Token, Time) ->
+loop(Token) ->
   Messages = get_messages(Token),
-  Unread = lists:takewhile(fun ({[_Kind, {<<"data">>, {Msg}}]}) -> proplists:get_value(<<"created_utc">>, Msg) >= Time end, Messages),
-  N_Time = hd([process_message(Msg, Token) || {[_Kind, {<<"data">>, {Msg}}]} <- Unread]++[Time]),
+  [process_message(Msg, Token) || {[_Kind, {<<"data">>, {Msg}}]} <- Messages],
   timer:sleep(10000),
-  io:fwrite("Time is: ~f~n", [N_Time]),
-  loop(get_token(), N_Time).
+  loop(get_token()).
 
 get_messages(Token) ->
   {ok,{{"HTTP/1.1",200,"OK"},
        _Content, Result}} = httpc:request(get,
-                                          {"https://oauth.reddit.com/message/mentions.json",
+                                          {"https://oauth.reddit.com/message/unread.json",
                                            [{"Authorization", "bearer "++Token},
                                             {"User-Agent", "TJ ? Auto_TJ"}]}, [], []),
   {Json} = jiffy:decode(Result),
@@ -40,25 +39,52 @@ get_messages(Token) ->
   proplists:get_value(<<"children">>, Data).
 
 process_message(Msg_Proplist, Token) ->
-  timer:sleep(1000),
+  timer:sleep(2000),
   M_Name = proplists:get_value(<<"name">>, Msg_Proplist),
   M_Body = proplists:get_value(<<"body">>, Msg_Proplist),
-  Body = "api_type=json&return_rtjson=false&text=\"hello!\"&thing_id="++binary_to_list(M_Name),
+  case re:run(M_Body, "\\[\\d+d\\d+\\]", [{capture, all, list}, global]) of
+    nomatch -> read_message(M_Name, Token);
+    {match, Rolls} ->
+      Result = respond_message(Rolls, M_Name, Token),
+      case jiffy:decode(Result) of
+        {<<"json">>, {<<"errors">>, [], _}} -> read_message(M_Name, Token);
+        _ -> exit("error sending message")
+      end
+  end.
+
+respond_message(Rolls, Msg, Token) ->
+  F_Rolls = lists:join(", ", [Roll || [Roll] <- Rolls]),
+  Body = "api_type=json&return_rtjson=false&text="++F_Rolls++"&thing_id="++binary_to_list(Msg),
+  io:fwrite("~s~n", [Body]),
   {ok,
-   {{"HTTP/1.1",200,"OK"},
+  {{"HTTP/1.1",200,"OK"},
     _Content,
     Result}} = httpc:request(post,
                 {"https://oauth.reddit.com/api/comment",
-                 [{"Authorization", "bearer "++Token},
-                  {"User-Agent", "TJ ? Auto_TJ"}],
-                 "application/x-www-form-urlencoded",
-                 Body
-                 },
+                [{"Authorization", "bearer "++Token},
+                  {"User-Agent", "TJ / Auto_TJ"}],
+                "application/x-www-form-urlencoded",
+                Body},
                 [{ssl,[]}],
                 []),
   io:fwrite("Result:~p~n", [Result]),
-  proplists:get_value(<<"created_utc">>, Msg_Proplist).
+  Result.
 
+read_message(Msg, Token) ->
+  Read = "id="++binary_to_list(Msg),
+  {ok,
+   {{"HTTP/1.1",200,"OK"},
+   _Read_Content,
+   Read_Res}} = httpc:request(post,
+                              {"https://oauth.reddit.com/api/read_message",
+                               [{"Authorization", "bearer "++Token},
+                                {"User-Agent", "TJ / Auto_TJ"}],
+                               "application/x-www-form-urlencoded",
+                               Read},
+                              [{ssl,[]}],
+                              []),
+      io:fwrite("~s~n", [Read_Res]).
+  
 get_token() ->
   Body = "grant_type=refresh_token&refresh_token="++?REFRESH_TOKEN,
   {ok,
@@ -66,7 +92,8 @@ get_token() ->
     _Content,
     Result}} = httpc:request(post,
                 {"https://www.reddit.com/api/v1/access_token",
-                 [{"Authorization", "Basic " ++ base64:encode_to_string(?REDDIT_PERSONAL ++ ":" ++ ?REDDIT_SECRET)}],
+                 [{"Authorization", "Basic " ++ base64:encode_to_string(?REDDIT_PERSONAL ++ ":" ++ ?REDDIT_SECRET)},
+                  {"User-Agent", "TJ / Auto_TJ"}],
                  "application/x-www-form-urlencoded",
                  Body
                  },
