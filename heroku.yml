@@ -2,4 +2,5 @@ build:
   docker:
     web: Dockerfile
 run:
-  web: cd /rbot && rebar3 shell
+  web: erl -pa /rbot/_build/**/ebin -noshell -eval "application:start(rbot)"
+

@@ -24,3 +24,4 @@ EXPOSE 9418
 RUN cd /rbot/ && rebar3 compile
 
 CMD erl -pa /rbot/_build/**/ebin -noshell -eval "application:start(rbot)"
+
