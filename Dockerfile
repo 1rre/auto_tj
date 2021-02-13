@@ -1,8 +1,8 @@
 FROM voidlinux/voidlinux:latest
 
-RUN xbps-install -Suy && xbps-install -y erlang curl git gcc
+RUN xbps-install -Suy erlang curl git gcc
 
-RUN cd /usr/bin && curl -LJO https://github.com/erlang/rebar3/releases/download/3.14.3/rebar3 && chmod a+wrx rebar3
+RUN cd /usr/bin && curl -LJO https://github.com/erlang/rebar3/releases/download/3.14.3/rebar3 && chmod a+x rebar3
 
 # delete all the apt list files since they're big and get stale quickly
 RUN rm -rf /var/lib/apt/lists/*
@@ -15,11 +15,11 @@ RUN mkdir -p /run/systemd && echo 'docker' > /run/systemd/container
 
 ADD ./ /rbot/
 
-EXPOSE 9418
 EXPOSE 80
 EXPOSE 443
 EXPOSE 8080
 EXPOSE 8443
+EXPOSE 9418
 
 RUN cd /rbot/ && rebar3 compile
 
