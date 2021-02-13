@@ -23,4 +23,4 @@ EXPOSE 8443
 
 RUN cd /rbot/ && rebar3 compile
 
-CMD cd /rbot/ && rebar3 shell
+CMD erl -pa /rbot/_build/**/ebin -noshell -eval "application:start(rbot)"
