@@ -1,6 +1,6 @@
 build:
   docker:
-    web: Dockerfile
+    worker: Dockerfile
 run:
-  web: erl -pa /rbot/_build/**/ebin -noshell -eval "application:start(rbot)"
+  worker: erl -pa /rbot/_build/**/ebin -noshell -eval "application:start(rbot)"
 
