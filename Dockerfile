@@ -1,6 +1,6 @@
 FROM voidlinux/voidlinux:latest
 
-RUN xbps-install -Suy && xbps-install -y erlang curl
+RUN xbps-install -Suy && xbps-install -y erlang curl git
 
 RUN cd /usr/bin && curl -LJO https://github.com/erlang/rebar3/releases/download/3.14.3/rebar3 && chmod a+wrx rebar3
 
@@ -15,6 +15,7 @@ RUN mkdir -p /run/systemd && echo 'docker' > /run/systemd/container
 
 ADD ./ /rbot/
 
+EXPOSE 9418
 EXPOSE 80
 EXPOSE 443
 EXPOSE 8080
