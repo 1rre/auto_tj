@@ -15,6 +15,11 @@ RUN mkdir -p /run/systemd && echo 'docker' > /run/systemd/container
 
 ADD ./ /rbot/
 
+EXPOSE 80
+EXPOSE 443
+EXPOSE 8080
+EXPOSE 8443
+
 RUN cd /rbot/ && rebar3 compile
 
 CMD cd /rbot/ && rebar3 shell
