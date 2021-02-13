@@ -1,6 +1,6 @@
 FROM voidlinux/voidlinux:latest
 
-RUN xbps-install -Suy && xbps-install -y erlang curl git
+RUN xbps-install -Suy && xbps-install -y erlang curl git gcc
 
 RUN cd /usr/bin && curl -LJO https://github.com/erlang/rebar3/releases/download/3.14.3/rebar3 && chmod a+wrx rebar3
 
