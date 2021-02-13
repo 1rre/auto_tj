@@ -15,4 +15,6 @@ RUN mkdir -p /run/systemd && echo 'docker' > /run/systemd/container
 
 ADD ./ /rbot/
 
+RUN cd /rbot/ && rebar3 compile
+
 CMD cd /rbot/ && rebar3 shell
