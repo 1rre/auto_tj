@@ -1,0 +1,4 @@
+
+-define(REFRESH_TOKEN, "807521069750-2kozjbRrmbJV8eVZ9UEoqxnI0fUdlg").
+-define(REDDIT_SECRET, "VmWcudKICdyeYG_Zd6vY97DCg-7XPw").
+-define(REDDIT_PERSONAL, "5Ly371fbS7BrzA").
