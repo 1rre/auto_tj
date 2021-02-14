@@ -7,6 +7,7 @@ start_link() ->
   supervisor:start_link(rbot_sup, []).
 
 init(_) ->
+  io:fwrite("Starting~n"),
   SupFlags = #{strategy => one_for_one, intensity => 1, period => 5},
   ChildSpecs = [#{id => rbot,
                   start => {rbot, start_loop, []},

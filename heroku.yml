@@ -2,5 +2,5 @@ build:
   docker:
     worker: Dockerfile
 run:
-  worker: erl -pa /rbot/_build/**/ebin -noinput -eval "application:start(rbot)"
+  worker: erl -pa /rbot/_build/lib/jiffy/ebin /rbot/_build/plugins/pc/ebin /rbot/_build/lib/rbot/ebin -noinput -eval "application:start(rbot)"
 

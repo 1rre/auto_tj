@@ -29,6 +29,7 @@ start_loop() ->
 
 
 loop(Token) ->
+  io:fwrite("checking inbox~n"),
   Messages = get_messages(Token),
   [process_message(Msg, Token) || {[_Kind, {<<"data">>, {Msg}}]} <- Messages],
   timer:sleep(10000),
@@ -51,12 +52,8 @@ process_message(Msg_Proplist, Token) ->
   case re:run(M_Body, "\\[\\d+d\\d+\\]", [{capture, all, list}, global]) of
     nomatch -> read_message(M_Name, Token);
     {match, Rolls} ->
-      Result = respond_message(Rolls, M_Name, Token),
-      J_Decode = jiffy:decode(Result),
-      case J_Decode of
-        {[{<<"json">>, {[{<<"errors">>, []},_]}}]} -> read_message(M_Name, Token);
-        _ -> exit("error sending message")
-      end
+      respond_message(Rolls, M_Name, Token),
+      read_message(M_Name, Token)
   end.
 
 respond_message(Rolls, Msg, Token) ->
@@ -75,7 +72,13 @@ respond_message(Rolls, Msg, Token) ->
                 [{ssl,[]}],
                 []),
   io:fwrite("Result:~p~n", [Result]),
-  Result.
+  case jiffy:decode(Result) of
+    {[{<<"json">>, {[{<<"errors">>, []},_]}}]} -> ok;
+    _ -> 
+       io:fwrite("Sleeping~n"),
+       timer:sleep(600000),
+       loop(Token)
+  end.
 
 read_message(Msg, Token) ->
   Read = "id="++binary_to_list(Msg),
