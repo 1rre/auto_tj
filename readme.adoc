@@ -1,0 +1,13 @@
+= Reddit Dice Roll Bot
+
+A simple Reddit bot that performs dice rolls when mentioned in a reddit comment.
+
+== Hosting
+To host the bot, get a Reddit API key and refresh token and create `include/priv_keys.hrl` containing the following lines:
+[source]
+-define(REFRESH_TOKEN, <<Your oauth refresh token>>).
+-define(REDDIT_SECRET, <<Your secret API key>>).
+-define(REDDIT_PERSONAL, <<Your personal API key>>).
+
+== Using
+To use the bot, use the following in a reddit comment: `[\#d#] /u/auto_tj`, where `#` is any number. The mention and diceroll can be called anywhere in the comment.
